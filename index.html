@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<title>MONOCHROME · Finance Manager</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --black:#0A0A0A;
+  --dark:#141414;
+  --surface:#1C1C1C;
+  --surface-2:#242424;
+  --surface-3:#2E2E2E;
+  --line:#333333;
+  --line-2:#3F3F3F;
+  --text:#F5F5F5;
+  --text-2:#A8A8A8;
+  --text-3:#6E6E6E;
+  --pure:#FFFFFF;
+  --income:#B8B8B8;
+  --expense:#7A7A7A;
+  --radius:22px;
+  --radius-sm:16px;
+  --radius-xs:12px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+html,body{height:100%}
+body{
+  background:var(--black);
+  color:var(--text);
+  font-family:system-ui,-apple-system,'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  min-height:100dvh;
+  padding:0;
+  overflow-x:hidden;
+}
+@media(min-width:600px){body{padding:20px}}
+button,input,select,textarea{font:inherit;color:inherit;outline:none;border:none;background:none}
+button{cursor:pointer;-webkit-user-select:none;user-select:none}
+svg{display:block;flex:none}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+/* APP SHELL */
+.app{
+  width:100%;
+  max-width:480px;
+  background:var(--dark);
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  padding:20px 18px calc(140px + env(safe-area-inset-bottom));
+  gap:20px;
+  position:relative;
+}
+@media(min-width:600px){
+  .app{border-radius:var(--radius);border:1px solid var(--line);min-height:auto;box-shadow:0 30px 80px -30px rgba(0,0,0,.9);padding-bottom:20px;max-height:calc(100dvh - 40px);overflow-y:auto}
+}
+
+/* HEADER */
+.app-header{display:flex;justify-content:space-between;align-items:center;padding-top:env(safe-area-inset-top)}
+.logo{font-weight:600;font-size:1.1rem;letter-spacing:3px;text-transform:uppercase;color:var(--pure);display:flex;align-items:center;gap:10px}
+.logo svg{width:20px;height:20px;stroke:var(--pure);stroke-width:1.8;fill:none}
+.header-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s var(--ease-spring),background .2s var(--ease),border-color .2s var(--ease);
+}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn:hover{background:var(--surface-2);border-color:var(--line-2)}
+.icon-btn svg{width:19px;height:19px;stroke:var(--text);stroke-width:1.8;fill:none;transition:stroke .2s var(--ease)}
+.icon-btn:hover svg{stroke:var(--pure)}
+
+/* BALANCE CARD */
+.balance-card{
+  background:linear-gradient(150deg,#1F1F1F 0%,#141414 100%);
+  border-radius:var(--radius-sm);
+  padding:24px 22px;
+  border:1px solid var(--line);
+  position:relative;
+  overflow:hidden;
+  transition:border-color .3s var(--ease);
+}
+.balance-card::before{
+  content:'';position:absolute;top:-50%;right:-30%;width:250px;height:250px;
+  background:radial-gradient(circle,rgba(255,255,255,.04) 0%,transparent 70%);
+  pointer-events:none;
+}
+.balance-label{font-size:.72rem;text-transform:uppercase;letter-spacing:2.5px;color:var(--text-3);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.balance-label svg{width:13px;height:13px;stroke:var(--text-3);stroke-width:2;fill:none}
+.balance-amount{
+  font-size:2.2rem;font-weight:600;letter-spacing:-1px;color:var(--pure);
+  line-height:1.1;position:relative;word-break:break-word;
+  transition:color .2s var(--ease);
+}
+.balance-amount.negative{color:#8A8A8A}
+.balance-sub{display:flex;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:.8rem;color:var(--text-2);letter-spacing:.2px}
+.balance-sub-item{display:flex;align-items:center;gap:6px}
+.balance-sub-item svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
+.balance-sub-item b{color:var(--pure);font-weight:500}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-block{
+  background:var(--surface);border-radius:var(--radius-xs);padding:16px 14px;
+  display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);
+  transition:transform .2s var(--ease-spring),background .2s var(--ease),border-color .2s var(--ease);
+  cursor:default;
+}
+.stat-block:hover{background:var(--surface-2);border-color:var(--line-2)}
+.stat-block:active{transform:scale(.98)}
+.stat-header{display:flex;align-items:center;gap:8px}
+.stat-icon{width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex:none}
+.stat-icon svg{width:14px;height:14px;stroke:var(--text-2);stroke-width:2;fill:none}
+.stat-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-3);font-weight:500}
+.stat-amount{font-size:1.3rem;font-weight:600;color:var(--pure);letter-spacing:-.3px;word-break:break-word}
+.stat-count{font-size:.68rem;color:var(--text-3);letter-spacing:.3px}
+
+/* SECTION */
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-head h3{font-size:.78rem;text-transform:uppercase;letter-spacing:2px;font-weight:500;color:var(--text-2)}
+.section-head button{font-size:.72rem;color:var(--text-3);letter-spacing:.5px;transition:color .2s var(--ease)}
+.section-head button:hover{color:var(--pure)}
+
+/* TRANSACTION LIST */
+.tx-list{display:flex;flex-direction:column;gap:8px}
+.tx-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 14px;background:var(--surface);border-radius:var(--radius-xs);
+  border:1px solid var(--line);cursor:pointer;position:relative;overflow:hidden;
+  transition:background .2s var(--ease),border-color .2s var(--ease),transform .15s var(--ease-spring);
+  animation:slideIn .35s var(--ease) both;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tx-item:hover{background:var(--surface-2);border-color:var(--line-2)}
+.tx-item:active{transform:scale(.985)}
+.tx-item.removing{animation:slideOut .3s var(--ease) forwards}
+@keyframes slideOut{to{opacity:0;transform:translateX(30px);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:-8px}}
+.tx-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.tx-icon{
+  width:42px;height:42px;border-radius:12px;background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;flex:none;
+  transition:background .2s var(--ease);
+}
+.tx-icon svg{width:18px;height:18px;stroke:var(--text-2);stroke-width:1.8;fill:none}
+.tx-item[data-type="income"] .tx-icon svg{stroke:var(--pure)}
+.tx-item[data-type="expense"] .tx-icon svg{stroke:var(--text-2)}
+.tx-info{min-width:0;flex:1}
+.tx-name{font-weight:500;font-size:.92rem;color:var(--pure);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.1px}
+.tx-meta{font-size:.68rem;color:var(--text-3);letter-spacing:.3px;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+.tx-cat{background:var(--surface-3);padding:1px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.8px;font-size:.6rem}
+.tx-amount{font-weight:600;font-size:.98rem;color:var(--pure);letter-spacing:-.2px;white-space:nowrap}
+.tx-item[data-type="income"] .tx-amount{color:var(--pure)}
+.tx-item[data-type="expense"] .tx-amount{color:var(--text-2)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:36px 20px;color:var(--text-3);display:flex;flex-direction:column;align-items:center;gap:12px}
+.empty svg{width:36px;height:36px;stroke:var(--text-3);stroke-width:1.5;fill:none}
+.empty p{font-size:.82rem;letter-spacing:.3px;line-height:1.6}
+
+/* ADD BUTTON (FLOATING ON MOBILE) */
+.fab{
+  position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));right:max(20px,calc(50vw - 220px));
+  width:60px;height:60px;border-radius:50%;background:var(--pure);color:var(--black);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.7),0 0 0 0 rgba(255,255,255,.15);
+  transition:transform .25s var(--ease-spring),box-shadow .25s var(--ease);
+  z-index:50;
+}
+.fab:hover{transform:scale(1.06);box-shadow:0 14px 40px rgba(0,0,0,.8)}
+.fab:active{transform:scale(.94)}
+.fab svg{width:26px;height:26px;stroke:var(--black);stroke-width:2.2;fill:none}
+@media(min-width:600px){
+  .fab{position:sticky;bottom:0;right:0;align-self:flex-end;margin-top:4px;width:auto;height:52px;border-radius:26px;padding:0 22px;gap:10px;font-weight:600;font-size:.85rem;letter-spacing:.5px}
+  .fab svg{width:18px;height:18px}
+  .fab::after{content:'Add Transaction'}
+}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;z-index:100;
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal{
+  width:100%;max-width:480px;background:var(--dark);
+  border-radius:var(--radius) var(--radius) 0 0;
+  border:1px solid var(--line);border-bottom:none;
+  padding:24px 20px calc(24px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .35s var(--ease);
+  max-height:92dvh;overflow-y:auto;
+}
+@media(min-width:600px){
+  .modal{border-radius:var(--radius);border-bottom:1px solid var(--line);transform:translateY(20px) scale(.97);opacity:0;transition:transform .3s var(--ease),opacity .3s var(--ease)}
+  .modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:38px;height:4px;background:var(--line-2);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-size:1.1rem;font-weight:600;color:var(--pure);letter-spacing:-.2px;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-3);font-weight:500;margin-bottom:8px;display:block}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface);border-radius:var(--radius-xs);padding:4px;border:1px solid var(--line)}
+.type-btn{
+  padding:12px;border-radius:9px;font-size:.82rem;font-weight:500;letter-spacing:.5px;
+  color:var(--text-3);transition:all .25s var(--ease);display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.type-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none}
+.type-btn.active{background:var(--surface-3);color:var(--pure)}
+.type-btn[data-type="income"].active{background:var(--pure);color:var(--black)}
+.type-btn[data-type="expense"].active{background:var(--surface-3);color:var(--pure)}
+.input{
+  width:100%;padding:14px 16px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius-xs);font-size:.95rem;color:var(--pure);
+  transition:border-color .2s var(--ease),background .2s var(--ease);
+}
+.input:focus{border-color:var(--text-3);background:var(--surface-2)}
+.input::placeholder{color:var(--text-3)}
+.input-amount{font-size:1.5rem;font-weight:600;letter-spacing:-.5px;padding:16px}
+.amount-wrap{position:relative}
+.amount-wrap .currency{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:1.5rem;font-weight:600;pointer-events:none}
+.amount-wrap .input{padding-left:38px}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cat-btn{
+  padding:12px 6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xs);
+  display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s var(--ease);
+}
+.cat-btn svg{width:18px;height:18px;stroke:var(--text-2);stroke-width:1.8;fill:none;transition:stroke .2s var(--ease)}
+.cat-btn span{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);transition:color .2s var(--ease)}
+.cat-btn.active{border-color:var(--pure);background:var(--surface-2)}
+.cat-btn.active svg{stroke:var(--pure)}
+.cat-btn.active span{color:var(--pure)}
+.btn-row{display:grid;grid-template-columns:1fr 1.5fr;gap:10px;margin-top:24px}
+.btn{
+  padding:15px;border-radius:var(--radius-xs);font-size:.9rem;font-weight:600;letter-spacing:.3px;
+  transition:transform .15s var(--ease-spring),background .2s var(--ease),opacity .2s var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn svg{width:17px;height:17px;stroke:currentColor;stroke-width:2.2;fill:none}
+.btn:active{transform:scale(.96)}
+.btn-ghost{background:var(--surface);color:var(--text-2);border:1px solid var(--line)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--pure)}
+.btn-primary{background:var(--pure);color:var(--black)}
+.btn-primary:hover{background:#E8E8E8}
+.btn-danger{background:var(--surface-2);color:var(--text);border:1px solid var(--line-2)}
+.btn-danger:hover{background:var(--surface-3)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:calc(100px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--pure);color:var(--black);padding:12px 20px;border-radius:var(--radius-xs);
+  font-size:.82rem;font-weight:500;letter-spacing:.2px;z-index:200;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+}
+.toast svg{width:16px;height:16px;stroke:var(--black);stroke-width:2.5;fill:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FILTER */
+.filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{
+  padding:7px 14px;background:var(--surface);border:1px solid var(--line);border-radius:20px;
+  font-size:.72rem;letter-spacing:.5px;color:var(--text-3);white-space:nowrap;
+  transition:all .2s var(--ease);text-transform:uppercase;font-weight:500;
+}
+.filter-chip:hover{border-color:var(--line-2);color:var(--text-2)}
+.filter-chip.active{background:var(--pure);color:var(--black);border-color:var(--pure)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      MONO
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <button class="icon-btn" id="resetBtn" aria-label="Reset data">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- BALANCE CARD -->
+  <div class="balance-card">
+    <div class="balance-label">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Total Balance
+    </div>
+    <div class="balance-amount num" id="totalBalance">Rp 0</div>
+    <div class="balance-sub">
+      <div class="balance-sub-item">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        In <b class="num" id="totalIncome">Rp 0</b>
+      </div>
+      <div class="balance-sub-item">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        Out <b class="num" id="totalExpense">Rp 0</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-block">
+      <div class="stat-header">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
+        <span class="stat-label">Income</span>
+      </div>
+      <div class="stat-amount num" id="statIncome">Rp 0</div>
+      <div class="stat-count" id="countIncome">0 transaksi</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-header">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+        <span class="stat-label">Expense</span>
+      </div>
+      <div class="stat-amount num" id="statExpense">Rp 0</div>
+      <div class="stat-count" id="countExpense">0 transaksi</div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <section>
+    <div class="section-head">
+      <h3>Transactions</h3>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="income">Income</button>
+      <button class="filter-chip" data-filter="expense">Expense</button>
+    </div>
+    <div class="tx-list" id="txList" style="margin-top:12px"></div>
+  </section>
+
+  <!-- ADD BUTTON (inline on desktop, fixed on mobile) -->
+  <button class="fab" id="fab" aria-label="Add transaction">
+    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="modalTitle">Transaksi Baru</h2>
+
+    <div class="form-group">
+      <label class="form-label">Tipe</label>
+      <div class="type-toggle">
+        <button class="type-btn active" data-type="income">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Pemasukan
+        </button>
+        <button class="type-btn" data-type="expense">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          Pengeluaran
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Jumlah</label>
+      <div class="amount-wrap">
+        <span class="currency">Rp</span>
+        <input type="text" inputmode="numeric" class="input input-amount num" id="inputAmount" placeholder="0" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Deskripsi</label>
+      <input type="text" class="input" id="inputDesc" placeholder="Misal: Gaji bulanan, Makan siang" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Kategori</label>
+      <div class="cat-grid" id="catGrid">
+        <button class="cat-btn active" data-cat="Umum">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          <span>Umum</span>
+        </button>
+        <button class="cat-btn" data-cat="Makanan">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <span>Makanan</span>
+        </button>
+        <button class="cat-btn" data-cat="Transport">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <span>Transport</span>
+        </button>
+        <button class="cat-btn" data-cat="Belanja">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span>Belanja</span>
+        </button>
+        <button class="cat-btn" data-cat="Tagihan">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Tagihan</span>
+        </button>
+        <button class="cat-btn" data-cat="Gaji">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>Gaji</span>
+        </button>
+        <button class="cat-btn" data-cat="Investasi">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <span>Investasi</span>
+        </button>
+        <button class="cat-btn" data-cat="Lainnya">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          <span>Lainnya</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="cancelBtn">Batal</button>
+      <button class="btn btn-primary" id="saveBtn">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Simpan
+      </button>
+    </div>
+    <button class="btn btn-danger" id="deleteBtn" style="width:100%;margin-top:10px;display:none">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Hapus Transaksi
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Tersimpan</span>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ STORAGE ============ */
+const STORE_KEY = 'monochrome_finance_v1';
+let transactions = [];
+let editingId = null;
+let currentFilter = 'all';
+let currentType = 'income';
+let currentCat = 'Umum';
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    transactions = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(transactions)) transactions = [];
+  }catch(e){ transactions = []; }
+}
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(transactions)); }catch(e){}
+}
+
+/* ============ HELPERS ============ */
+function formatRp(n){
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(Math.round(n));
+  return sign + 'Rp ' + abs.toLocaleString('id-ID');
+}
+function formatRpShort(n){
+  const abs = Math.abs(n);
+  if(abs >= 1e9) return (n/1e9).toFixed(1).replace('.0','') + 'M';
+  if(abs >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'jt';
+  if(abs >= 1e3) return (n/1e3).toFixed(0) + 'rb';
+  return String(Math.round(n));
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function parseAmount(str){
+  const digits = String(str).replace(/[^\d]/g, '');
+  return digits ? parseInt(digits, 10) : 0;
+}
+function formatAmountInput(str){
+  const n = parseAmount(str);
+  return n ? n.toLocaleString('id-ID') : '';
+}
+function timeAgo(ts){
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff/1000);
+  if(s < 60) return 'Baru saja';
+  const m = Math.floor(s/60);
+  if(m < 60) return m + ' menit lalu';
+  const h = Math.floor(m/60);
+  if(h < 24) return h + ' jam lalu';
+  const d = Math.floor(h/24);
+  if(d < 7) return d + ' hari lalu';
+  return new Date(ts).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+}
+function getCatIcon(cat){
+  const icons = {
+    'Umum':'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>',
+    'Makanan':'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+    'Transport':'<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+    'Belanja':'<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+    'Tagihan':'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    'Gaji':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    'Investasi':'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    'Lainnya':'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
+  };
+  return icons[cat] || icons['Umum'];
+}
+
+/* ============ RENDER ============ */
+function computeTotals(){
+  let income = 0, expense = 0, countIn = 0, countEx = 0;
+  transactions.forEach(t => {
+    if(t.type === 'income'){ income += t.amount; countIn++; }
+    else { expense += t.amount; countEx++; }
+  });
+  return { income, expense, balance: income - expense, countIn, countEx };
+}
+
+function render(){
+  const { income, expense, balance, countIn, countEx } = computeTotals();
+
+  const balEl = document.getElementById('totalBalance');
+  balEl.textContent = formatRp(balance);
+  balEl.classList.toggle('negative', balance < 0);
+
+  document.getElementById('totalIncome').textContent = formatRp(income);
+  document.getElementById('totalExpense').textContent = formatRp(expense);
+  document.getElementById('statIncome').textContent = formatRp(income);
+  document.getElementById('statExpense').textContent = formatRp(expense);
+  document.getElementById('countIncome').textContent = countIn + ' transaksi';
+  document.getElementById('countExpense').textContent = countEx + ' transaksi';
+
+  const list = document.getElementById('txList');
+  let filtered = transactions;
+  if(currentFilter !== 'all') filtered = transactions.filter(t => t.type === currentFilter);
+  filtered = [...filtered].sort((a,b) => b.createdAt - a.createdAt);
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <p>${currentFilter === 'all' ? 'Belum ada transaksi.<br>Tekan tombol + untuk menambahkan.' : 'Tidak ada transaksi ' + currentFilter + '.'}</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(t => {
+    const sign = t.type === 'income' ? '+' : '-';
+    return `<div class="tx-item" data-id="${t.id}" data-type="${t.type}">
+      <div class="tx-left">
+        <div class="tx-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${getCatIcon(t.category)}</svg></div>
+        <div class="tx-info">
+          <div class="tx-name">${escapeHtml(t.description)}</div>
+          <div class="tx-meta">
+            <span class="tx-cat">${escapeHtml(t.category)}</span>
+            <span>${timeAgo(t.createdAt)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="tx-amount num">${sign}${formatRp(t.amount).replace('Rp ','Rp ')}</div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.tx-item').forEach(el => {
+    el.addEventListener('click', () => openEdit(el.dataset.id));
+  });
+}
+
+/* ============ MODAL ============ */
+const overlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const inputAmount = document.getElementById('inputAmount');
+const inputDesc = document.getElementById('inputDesc');
+const deleteBtn = document.getElementById('deleteBtn');
+
+function openModal(mode, id){
+  editingId = mode === 'edit' ? id : null;
+  modalTitle.textContent = mode === 'edit' ? 'Edit Transaksi' : 'Transaksi Baru';
+  deleteBtn.style.display = mode === 'edit' ? 'flex' : 'none';
+
+  if(mode === 'edit'){
+    const t = transactions.find(x => x.id === id);
+    if(!t) return;
+    currentType = t.type;
+    currentCat = t.category;
+    inputAmount.value = t.amount.toLocaleString('id-ID');
+    inputDesc.value = t.description;
+  } else {
+    currentType = 'income';
+    currentCat = 'Umum';
+    inputAmount.value = '';
+    inputDesc.value = '';
+  }
+  syncTypeButtons();
+  syncCatButtons();
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => inputAmount.focus(), 250);
+}
+
+function closeModal(){
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+function syncTypeButtons(){
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === currentType);
+  });
+}
+function syncCatButtons(){
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === currentCat);
+  });
+}
+
+/* ============ SAVE / DELETE ============ */
+function saveTransaction(){
+  const amount = parseAmount(inputAmount.value);
+  const desc = inputDesc.value.trim() || (currentType === 'income' ? 'Pemasukan' : 'Pengeluaran');
+
+  if(!amount || amount <= 0){
+    showToast('Masukkan jumlah yang valid', false);
+    inputAmount.focus();
+    return;
+  }
+
+  if(editingId){
+    const idx = transactions.findIndex(t => t.id === editingId);
+    if(idx >= 0){
+      transactions[idx] = { ...transactions[idx], type: currentType, amount, description: desc, category: currentCat };
+    }
+  } else {
+    transactions.push({
+      id: uid(),
+      type: currentType,
+      amount,
+      description: desc,
+      category: currentCat,
+      createdAt: Date.now()
+    });
+  }
+
+  save();
+  render();
+  closeModal();
+  showToast(editingId ? 'Transaksi diperbarui' : 'Transaksi ditambahkan');
+}
+
+function deleteTransaction(){
+  if(!editingId) return;
+  const el = document.querySelector(`.tx-item[data-id="${editingId}"]`);
+  if(el) el.classList.add('removing');
+  transactions = transactions.filter(t => t.id !== editingId);
+  save();
+  setTimeout(() => { render(); closeModal(); }, 250);
+  showToast('Transaksi dihapus');
+}
+
+/* ============ TOAST ============ */
+let toastTimer;
+function showToast(msg, success = true){
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.querySelector('svg').style.display = success ? 'block' : 'none';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+/* ============ EVENTS ============ */
+document.getElementById('fab').addEventListener('click', () => openModal('add'));
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('saveBtn').addEventListener('click', saveTransaction);
+deleteBtn.addEventListener('click', deleteTransaction);
+overlay.addEventListener('click', e => { if(e.target === overlay) closeModal(); });
+
+document.querySelectorAll('.type-btn').forEach(b => {
+  b.addEventListener('click', () => { currentType = b.dataset.type; syncTypeButtons(); });
+});
+document.querySelectorAll('.cat-btn').forEach(b => {
+  b.addEventListener('click', () => { currentCat = b.dataset.cat; syncCatButtons(); });
+});
+
+inputAmount.addEventListener('input', e => {
+  const cursorPos = e.target.selectionStart;
+  const before = e.target.value.length;
+  e.target.value = formatAmountInput(e.target.value);
+  const after = e.target.value.length;
+  const newPos = Math.max(0, cursorPos + (after - before));
+  e.target.setSelectionRange(newPos, newPos);
+});
+inputAmount.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); inputDesc.focus(); }
+});
+inputDesc.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); saveTransaction(); }
+});
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    currentFilter = chip.dataset.filter;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c === chip));
+    render();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(transactions.length === 0){ showToast('Data sudah kosong'); return; }
+  if(confirm('Hapus semua transaksi? Tindakan ini tidak bisa dibatalkan.')){
+    transactions = [];
+    save();
+    render();
+    showToast('Semua data dihapus');
+  }
+});
+
+// Theme toggle (subtle: switches between dark shades)
+let darkMode = true;
+document.getElementById('themeBtn').addEventListener('click', () => {
+  darkMode = !darkMode;
+  const root = document.documentElement;
+  if(darkMode){
+    root.style.setProperty('--dark', '#141414');
+    root.style.setProperty('--black', '#0A0A0A');
+    root.style.setProperty('--surface', '#1C1C1C');
+    root.style.setProperty('--text', '#F5F5F5');
+    root.style.setProperty('--pure', '#FFFFFF');
+  } else {
+    root.style.setProperty('--dark', '#1A1A1A');
+    root.style.setProperty('--black', '#0F0F0F');
+    root.style.setProperty('--surface', '#222222');
+    root.style.setProperty('--text', '#EDEDED');
+    root.style.setProperty('--pure', '#FAFAFA');
+  }
+});
+
+// ESC to close modal
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+});
+
+/* ============ INIT ============ */
+load();
+render();
+
+// Seed with sample data if first time
+if(transactions.length === 0 && !localStorage.getItem(STORE_KEY)){
+  const now = Date.now();
+  transactions = [
+    { id: uid(), type: 'income', amount: 8500000, description: 'Gaji Bulanan', category: 'Gaji', createdAt: now - 2*86400000 },
+    { id: uid(), type: 'expense', amount: 45000, description: 'Makan Siang', category: 'Makanan', createdAt: now - 1*86400000 },
+    { id: uid(), type: 'expense', amount: 25000, description: 'Ongkos Ojek', category: 'Transport', createdAt: now - 5*3600000 },
+    { id: uid(), type: 'income', amount: 1200000, description: 'Proyek Freelance', category: 'Investasi', createdAt: now - 30*60000 }
+  ];
+  save();
+  render();
+}
+
+})();
+</script>
+</body>
+</html>
